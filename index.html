@@ -353,8 +353,17 @@ function fmt(n){return"$"+Math.round(n).toLocaleString("es-CO");}
 onAuthStateChanged(auth,async u=>{
   if(u){
     me=u;
-    const usnap=await getDoc(doc(db,"users",u.uid));
-    meRole=usnap.exists()?usnap.data().role:"usuario";
+    // Retry reading role up to 3 times
+    for(let i=0;i<3;i++){
+      try{
+        const usnap=await getDoc(doc(db,"users",u.uid));
+        meRole=usnap.exists()?usnap.data().role:"usuario";
+        break;
+      }catch(e){
+        if(i<2)await new Promise(r=>setTimeout(r,1000));
+        else meRole="usuario";
+      }
+    }
     const uname=u.email.replace("@gssilva.com","");
     document.getElementById("ls").style.display="none";
     document.getElementById("ap").style.display="block";
